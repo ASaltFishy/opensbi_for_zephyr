@@ -6,7 +6,7 @@
  * Authors:
  *   Anup Patel <anup.patel@wdc.com>
  */
-
+#include <sbi/riscv_asm.h>
 #include <sbi/sbi_console.h>
 #include <sbi/sbi_ecall.h>
 #include <sbi/sbi_ecall_interface.h>
@@ -105,17 +105,25 @@ int sbi_ecall_handler(struct sbi_trap_regs *regs)
 	unsigned long out_val = 0;
 	bool is_0_1_spec = 0;
 
-	ext = sbi_ecall_find_extension(extension_id);
-	if (ext && ext->handle) {
-		ret = ext->handle(extension_id, func_id,
-				  regs, &out_val, &trap);
-		if (extension_id >= SBI_EXT_0_1_SET_TIMER &&
-		    extension_id <= SBI_EXT_0_1_SHUTDOWN)
-			is_0_1_spec = 1;
-	} else {
-		ret = SBI_ENOTSUPP;
+	if(extension_id==SBI_EXT_REDIRECT){
+		trap.epc = regs->mepc;
+		trap.cause = csr_read(CSR_MCAUSE);
+		trap.tval = csr_read(CSR_MTVAL);
+		sbi_trap_redirect(regs, &trap);
+		return 0;
+	}else{
+		ext = sbi_ecall_find_extension(extension_id);
+		if (ext && ext->handle) {
+			ret = ext->handle(extension_id, func_id,
+					regs, &out_val, &trap);
+			if (extension_id >= SBI_EXT_0_1_SET_TIMER &&
+				extension_id <= SBI_EXT_0_1_SHUTDOWN)
+				is_0_1_spec = 1;
+		} else {
+			ret = SBI_ENOTSUPP;
+		}
 	}
-
+	
 	if (ret == SBI_ETRAP) {
 		trap.epc = regs->mepc;
 		sbi_trap_redirect(regs, &trap);

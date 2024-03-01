@@ -13,6 +13,7 @@
 /* clang-format off */
 
 /* SBI Extension IDs */
+#define SBI_EXT_REDIRECT			0x11
 #define SBI_EXT_0_1_SET_TIMER			0x0
 #define SBI_EXT_0_1_CONSOLE_PUTCHAR		0x1
 #define SBI_EXT_0_1_CONSOLE_GETCHAR		0x2
